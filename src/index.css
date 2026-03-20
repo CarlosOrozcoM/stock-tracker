@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Sniglet&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sniglet: "Sniglet", system-ui, sans-serif;
+  --font-quicksand: "Quicksand", system-ui, sans-serif;
+  
+  --color-kawaii-bg1: #FDE2E8;
+  --color-kawaii-bg2: #F8F9F3;
+  --color-kawaii-accent1: #FFD2EE;
+  --color-kawaii-accent2: #F2C9E7;
+  --color-kawaii-detail1: #E3DBE6;
+  --color-kawaii-detail2: #BF9D8A;
+  --color-kawaii-dark: #000000;
+}
+
+body {
+  font-family: var(--font-quicksand);
+  background-color: var(--color-kawaii-bg2);
+  color: var(--color-kawaii-dark);
+}
+
+h1, h2, h3, h4, h5, h6, .font-sniglet {
+  font-family: var(--font-sniglet);
+}
+
+.stock-status-icon {
+  width: 90px;
+  height: 100px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.stock-status-good {
+  background-image: url('/Tsuki-Ok.webp');
+
+}
+
+.stock-status-bad {
+  background-image: url('/Tsuki-Nok.webp');
+}
