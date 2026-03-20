@@ -141,7 +141,7 @@ export default function App() {
       <header className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div className="flex items-center gap-3">
           <div className="bg-kawaii-bg1 p-3 rounded-full shadow-sm border-2 border-kawaii-detail1">
-            <img src="/icon-sakura-branch.png" alt="" />
+            <img src={`${(import.meta as any).env.BASE_URL}icon-sakura-branch.png`} alt="" />
           </div>
           <h1 className="text-4xl font-sniglet text-kawaii-dark tracking-wide">Kawaii Stocks</h1>
         </div>
