@@ -33,10 +33,14 @@ h1, h2, h3, h4, h5, h6, .font-sniglet {
 }
 
 .stock-status-good {
-  background-image: url('/Tsuki-Ok.webp');
+  background-image: url('/tsuki-ok.webp');
 
 }
 
 .stock-status-bad {
-  background-image: url('/Tsuki-Nok.webp');
+  background-image: url('/tsuki-nok.webp');
+}
+
+.stock-status-wait {
+  background-image: url('/tsuki-wait.webp');
 }
