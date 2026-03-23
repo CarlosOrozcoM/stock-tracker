@@ -7,6 +7,7 @@ export interface Stock {
   notificationsEnabled: boolean;
   currentPrice: number;
   basePrice: number;
+  hasMaxNotificationShown?: boolean;
 }
 
 export interface Notification {

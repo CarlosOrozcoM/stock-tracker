@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Stock, Notification } from './types';
 import { StockCard } from './components/StockCard';
 import { AddStockModal } from './components/AddStockModal';
+import { isMarketOpen } from './utils/market';
 
 /* If you clone this repo, don't forget to hide your API Key                                      */
 /* You can request your own API Key in https://finnhub.io - this key is just for personal testing */
@@ -56,6 +57,12 @@ export default function App() {
   // Real API updates
   useEffect(() => {
     const updatePrices = async () => {
+      // Solo actualizamos si el mercado está abierto
+      if (!isMarketOpen().isOpen) {
+        console.log("Market is closed. Skipping price update.");
+        return;
+      }
+
       const currentStocks = stocksRef.current;
       if (currentStocks.length === 0) return;
 
@@ -69,6 +76,8 @@ export default function App() {
         if (priceData && priceData.currentPrice !== stock.currentPrice) {
           const newPrice = priceData.currentPrice;
           
+          let hasMaxShown = stock.hasMaxNotificationShown;
+          
           if (stock.notificationsEnabled) {
             if (newPrice < stock.minLimit && stock.currentPrice >= stock.minLimit) {
               addNotification(`¡${stock.symbol} bajó de $${stock.minLimit}! 📉`, 'min');
@@ -77,8 +86,19 @@ export default function App() {
               addNotification(`¡${stock.symbol} superó $${stock.maxLimit}! 📈`, 'max');
             }
           }
+
+          // Notificación única de venta si el precio supera el máximo
+          if (newPrice > stock.maxLimit && !hasMaxShown) {
+            addNotification(`Sell stocks now!!!`, 'max');
+            hasMaxShown = true;
+          }
           
-          newStocks[i] = { ...stock, currentPrice: newPrice, basePrice: priceData.previousClose };
+          newStocks[i] = { 
+            ...stock, 
+            currentPrice: newPrice, 
+            basePrice: priceData.previousClose,
+            hasMaxNotificationShown: hasMaxShown
+          };
           hasChanges = true;
         }
       }
@@ -88,8 +108,8 @@ export default function App() {
       }
     };
 
-    // Update every 10 minutes (600000 ms)
-    const interval = setInterval(updatePrices, 600000);
+    // Update every 5 minutes (300000 ms)
+    const interval = setInterval(updatePrices, 300000);
     
     // Fetch immediately on mount to ensure prices are up to date
     updatePrices();
@@ -118,6 +138,7 @@ export default function App() {
       id: Date.now().toString(),
       basePrice: priceData.previousClose,
       currentPrice: priceData.currentPrice,
+      hasMaxNotificationShown: false,
     };
     setStocks(prev => [...prev, stock]);
     setIsAddModalOpen(false);
