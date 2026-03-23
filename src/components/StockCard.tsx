@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Trash2, Bell, BellOff, Edit3, Check, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Stock } from '../types';
+import { isMarketOpen } from '../utils/market';
 
 export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimits }: { 
   stock: Stock, 
   onDelete: () => void, 
   onToggleNotifications: () => void,
-  onUpdateLimits: (min: number, max: number) => void
+  onUpdateLimits: (min: number, max: number) => void,
+  key?: React.Key
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editMin, setEditMin] = useState(stock.minLimit.toString());
@@ -15,6 +17,13 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
 
   const isBelowExpected = stock.currentPrice < stock.minLimit;
   const isAboveExpected = stock.currentPrice > stock.maxLimit;
+  const market = isMarketOpen();
+
+  const getStatusClass = () => {
+    if (!market.isOpen) return 'stock-status-wait';
+    if (isBelowExpected) return 'stock-status-bad';
+    return 'stock-status-good';
+  };
 
   const handleSave = () => {
     const min = parseFloat(editMin);
@@ -69,7 +78,7 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
           </div>
         </div>
         <div className="my-3 ">
-              <div className= {`mx-auto stock-status-icon ${isBelowExpected ? 'stock-status-bad' : 'stock-status-good'}`}></div>
+              <div className= {`mx-auto stock-status-icon ${getStatusClass()}`}></div>
         </div>
 
 
