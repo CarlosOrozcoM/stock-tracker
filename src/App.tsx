@@ -24,6 +24,7 @@ export default function App() {
   });
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSakuraEnabled, setIsSakuraEnabled] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const stocksRef = useRef(stocks);
 
@@ -161,8 +162,12 @@ export default function App() {
     <div className="min-h-screen bg-kawaii-bg2 p-4 md:p-8 font-quicksand">
       <header className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div className="flex items-center gap-3">
-          <div className="bg-kawaii-bg1 p-3 rounded-full shadow-sm border-2 border-kawaii-detail1">
-            <img src={`${(import.meta as any).env.BASE_URL}icon-sakura-branch.png`} alt="" />
+          <div 
+            onClick={() => setIsSakuraEnabled(!isSakuraEnabled)}
+            className={`bg-kawaii-bg1 p-3 rounded-full shadow-sm border-2 border-kawaii-detail1 sakura-toggle-button ${isSakuraEnabled ? 'sakura-toggle-active' : 'opacity-60'}`}
+            title={isSakuraEnabled ? "Desactivar Sakura" : "Activar Sakura"}
+          >
+            <img src={`${(import.meta as any).env.BASE_URL}icon-sakura-branch.png`} alt="" className="w-8 h-8" />
           </div>
           <h1 className="text-4xl font-sniglet text-kawaii-dark tracking-wide">Kawaii Stocks</h1>
         </div>
@@ -223,6 +228,25 @@ export default function App() {
           ))}
         </AnimatePresence>
       </div>
+      
+      {isSakuraEnabled && (
+        <div className="sakura-container">
+          {[...Array(20)].map((_, i) => (
+            <div 
+              key={i} 
+              className="sakura-petal"
+              style={{
+                left: `${Math.random() * 100}%`,
+                width: `${Math.random() * 10 + 10}px`,
+                height: `${Math.random() * 10 + 10}px`,
+                animationDelay: `${Math.random() * 10}s`,
+                animationDuration: `${Math.random() * 5 + 5}s, ${Math.random() * 3 + 2}s`,
+                opacity: Math.random() * 0.5 + 0.3
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
