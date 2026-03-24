@@ -2,6 +2,7 @@ export interface Stock {
   id: string;
   symbol: string;
   company: string;
+  myStocks: number;
   minLimit: number;
   maxLimit: number;
   notificationsEnabled: boolean;

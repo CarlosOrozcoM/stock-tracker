@@ -26,7 +26,27 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSakuraEnabled, setIsSakuraEnabled] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [exchangeRate, setExchangeRate] = useState<number>(18.0); // Valor por defecto
   const stocksRef = useRef(stocks);
+
+  // Fetch exchange rate
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=MXN');
+        const data = await res.json();
+        if (data && data.rates && data.rates.MXN) {
+          setExchangeRate(data.rates.MXN);
+        }
+      } catch (error) {
+        console.error("Error fetching exchange rate:", error);
+      }
+    };
+
+    fetchExchangeRate();
+    const interval = setInterval(fetchExchangeRate, 3600000); // Cada hora
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     stocksRef.current = stocks;
@@ -154,8 +174,8 @@ export default function App() {
     setStocks(stocks.map(s => s.id === id ? { ...s, notificationsEnabled: !s.notificationsEnabled } : s));
   };
 
-  const updateStockLimits = (id: string, minLimit: number, maxLimit: number) => {
-    setStocks(stocks.map(s => s.id === id ? { ...s, minLimit, maxLimit } : s));
+  const updateStockLimits = (id: string, minLimit: number, maxLimit: number, myStocks: number) => {
+    setStocks(stocks.map(s => s.id === id ? { ...s, minLimit, maxLimit, myStocks } : s));
   };
 
   return (
@@ -173,7 +193,7 @@ export default function App() {
         </div>
         <button 
           onClick={() => setIsAddModalOpen(true)}
-          className="bg-kawaii-accent1 hover:bg-kawaii-accent2 text-kawaii-dark font-sniglet text-lg py-3 px-6 rounded-full shadow-sm transition-transform active:scale-95 flex items-center gap-2 border-2 border-kawaii-detail1"
+          className="shake bg-kawaii-accent1 hover:bg-kawaii-accent2 text-kawaii-dark font-sniglet text-lg py-3 px-6 rounded-full shadow-sm transition-transform active:scale-95 flex items-center gap-2 border-2 border-kawaii-detail1"
         >
           <Plus className="w-5 h-5" />
           Track Empresa
@@ -195,7 +215,8 @@ export default function App() {
                   stock={stock} 
                   onDelete={() => deleteStock(stock.id)}
                   onToggleNotifications={() => toggleNotifications(stock.id)}
-                  onUpdateLimits={(min, max) => updateStockLimits(stock.id, min, max)}
+                  onUpdateLimits={(min, max, qty) => updateStockLimits(stock.id, min, max, qty)}
+                  exchangeRate={exchangeRate}
                 />
               ))}
             </AnimatePresence>

@@ -6,18 +6,20 @@ import { Stock } from '../types';
 export function AddStockModal({ onClose, onAdd }: { onClose: () => void, onAdd: (stock: Omit<Stock, 'id' | 'currentPrice' | 'basePrice'>) => Promise<boolean> }) {
   const [symbol, setSymbol] = useState('');
   const [company, setCompany] = useState('');
+  const [myStocks, setMyStocks] = useState('');
   const [minLimit, setMinLimit] = useState('');
   const [maxLimit, setMaxLimit] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!symbol || !company || !minLimit || !maxLimit) return;
+    if (!symbol || !company || !myStocks || !minLimit || !maxLimit) return;
     
     setIsLoading(true);
     await onAdd({
       symbol: symbol.toUpperCase(),
       company: company,
+      myStocks: parseFloat(myStocks) || 0,
       minLimit: parseFloat(minLimit),
       maxLimit: parseFloat(maxLimit),
       notificationsEnabled: true,
@@ -67,6 +69,18 @@ export function AddStockModal({ onClose, onAdd }: { onClose: () => void, onAdd: 
             />
           </div>
           
+          <div>
+            <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Tus Stocks (ej. 20)</label>
+            <input 
+              type="number" 
+              value={myStocks}
+              onChange={e => setMyStocks(e.target.value)}
+              placeholder="20"
+              className="w-full bg-kawaii-bg2 border-2 border-kawaii-detail1 rounded-2xl px-4 py-3 focus:outline-none focus:border-kawaii-accent2 font-sniglet text-lg"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Límite Mínimo ($)</label>
