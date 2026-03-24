@@ -44,7 +44,7 @@ export default function App() {
     };
 
     fetchExchangeRate();
-    const interval = setInterval(fetchExchangeRate, 3600000); // Cada hora
+    const interval = setInterval(fetchExchangeRate, 600000); // Cada 10 min
     return () => clearInterval(interval);
   }, []);
 
@@ -77,9 +77,9 @@ export default function App() {
 
   // Real API updates
   useEffect(() => {
-    const updatePrices = async () => {
-      // Solo actualizamos si el mercado está abierto
-      if (!isMarketOpen().isOpen) {
+    const updatePrices = async (forceUpdate = false) => {
+      // Solo actualizamos si el mercado está abierto o si es una actualización forzada (ej. carga inicial)
+      if (!forceUpdate && !isMarketOpen().isOpen) {
         console.log("Market is closed. Skipping price update.");
         return;
       }
@@ -130,10 +130,10 @@ export default function App() {
     };
 
     // Update every 5 minutes (300000 ms)
-    const interval = setInterval(updatePrices, 300000);
+    const interval = setInterval(() => updatePrices(), 300000);
     
-    // Fetch immediately on mount to ensure prices are up to date
-    updatePrices();
+    // Fetch immediately on mount to ensure prices are up to date (aunque el mercado esté cerrado)
+    updatePrices(true);
 
     return () => clearInterval(interval);
   }, []);
