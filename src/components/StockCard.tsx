@@ -14,12 +14,12 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
   key?: React.Key
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editMin, setEditMin] = useState(stock.minLimit.toString());
-  const [editMax, setEditMax] = useState(stock.maxLimit.toString());
-  const [editMyStocks, setEditMyStocks] = useState(stock.myStocks.toString());
+  const [editMin, setEditMin] = useState((stock.minLimit ?? 0).toString());
+  const [editMax, setEditMax] = useState((stock.maxLimit ?? 0).toString());
+  const [editMyStocks, setEditMyStocks] = useState((stock.myStocks ?? 0).toString());
 
-  const isBelowExpected = stock.currentPrice < stock.minLimit;
-  const isAboveExpected = stock.currentPrice > stock.maxLimit;
+  const isBelowExpected = stock.currentPrice < (stock.minLimit ?? 0);
+  const isAboveExpected = stock.currentPrice > (stock.maxLimit ?? 0);
   const market = isMarketOpen();
 
   const getStatusClass = () => {
@@ -147,13 +147,13 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
             <div className= "flex items-center justify-between">
               <div>
                 <p className="  text-kawaii-detail2">Mis Acciones:</p>
-                <p className="font-bold">{stock.myStocks}</p>
+                <p className="font-bold">{stock.myStocks ?? 0}</p>
               </div>
 
               <div className="text-right">
                 <p className="text-kawaii-detail2">Valor Total (MXN)</p>
                 <p className="font-bold text-kawaii-dark">
-                  ${(stock.myStocks * stock.currentPrice * exchangeRate).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${((stock.myStocks ?? 0) * stock.currentPrice * exchangeRate).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
               <button
