@@ -9,6 +9,8 @@ export interface Stock {
   currentPrice: number;
   basePrice: number;
   hasMaxNotificationShown?: boolean;
+  customExchangeRate: number;
+  useCustomExchangeRate: boolean;
 }
 
 export interface Notification {

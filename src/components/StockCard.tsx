@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Trash2, Bell, BellOff, Edit3, Check, X } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Trash2, Bell, BellOff, Edit3, Check, X, RefreshCw, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Stock } from '../types';
 import { isMarketOpen } from '../utils/market';
-import { div } from 'motion/react-client';
 
-export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimits, exchangeRate, key }: { 
+export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimits, onToggleExchangeRate, exchangeRate }: { 
   stock: Stock, 
   onDelete: () => void, 
   onToggleNotifications: () => void,
-  onUpdateLimits: (min: number, max: number, myStocks: number) => void,
+  onUpdateLimits: (min: number, max: number, myStocks: number, customRate: number) => void,
+  onToggleExchangeRate: () => void,
   exchangeRate: number,
   key?: React.Key
 }) {
@@ -17,6 +17,7 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
   const [editMin, setEditMin] = useState((stock.minLimit ?? 0).toString());
   const [editMax, setEditMax] = useState((stock.maxLimit ?? 0).toString());
   const [editMyStocks, setEditMyStocks] = useState((stock.myStocks ?? 0).toString());
+  const [editExchangeRate, setEditExchangeRate] = useState((stock.customExchangeRate ?? exchangeRate).toString());
 
   const isBelowExpected = stock.currentPrice < (stock.minLimit ?? 0);
   const isAboveExpected = stock.currentPrice > (stock.maxLimit ?? 0);
@@ -32,8 +33,9 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
     const min = parseFloat(editMin);
     const max = parseFloat(editMax);
     const qty = parseFloat(editMyStocks);
-    if (!isNaN(min) && !isNaN(max) && !isNaN(qty)) {
-      onUpdateLimits(min, max, qty);
+    const rate = parseFloat(editExchangeRate);
+    if (!isNaN(min) && !isNaN(max) && !isNaN(qty) && !isNaN(rate)) {
+      onUpdateLimits(min, max, qty, rate);
       setIsEditing(false);
     }
   };
@@ -42,8 +44,11 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
     setEditMin(stock.minLimit.toString());
     setEditMax(stock.maxLimit.toString());
     setEditMyStocks(stock.myStocks.toString());
+    setEditExchangeRate(stock.customExchangeRate.toString());
     setIsEditing(false);
   };
+
+  const currentRate = stock.useCustomExchangeRate ? stock.customExchangeRate : exchangeRate;
   
   return (
     <motion.div 
@@ -54,15 +59,16 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
       className="bg-white rounded-3xl p-6 shadow-sm border-2 border-kawaii-bg1 relative overflow-hidden group"
     >
       {/* Decorative blob */}
+      <div className="absolute top-25 -left-15 w-32 h-32 bg-kawaii-bg1 rounded-full opacity-50 z-0"></div>
       <div className="absolute -top-4 -right-10 w-32 h-32 bg-kawaii-bg1 rounded-full opacity-50 z-0"></div>
-      <div className="absolute top-16 -left-10 w-24 h-24 bg-kawaii-bg1 rounded-full opacity-50 z-0"></div>
       <div className="absolute top-24  -right-10 w-24 h-24 bg-kawaii-bg1 rounded-full opacity-50 z-0"></div>
 
-      <div className="relative z-10">
+
+      <div className="relative z-10 font-quicksand">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-end">
             <h2 className="text-3xl font-sniglet text-kawaii-dark">{stock.company}</h2>
-            <p className="text-xs font-sniglet text-kawaii-dark">({stock.symbol})</p>
+            <p className="text-xs font-sniglet text-kawaii-dark ml-1">({stock.symbol})</p>
             
           </div>
           <div className="flex gap-2">
@@ -133,6 +139,16 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
                 className="w-24 text-right rounded-xl border-2 border-kawaii-detail1 p-1 text-sm bg-white focus:outline-none focus:border-kawaii-accent2 font-sniglet" 
               />
             </div>
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-bold text-gray-600">TC (MXN):</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                value={editExchangeRate} 
+                onChange={e => setEditExchangeRate(e.target.value)} 
+                className="w-24 text-right rounded-xl border-2 border-kawaii-detail1 p-1 text-sm bg-white focus:outline-none focus:border-kawaii-accent2 font-sniglet transition-all" 
+              />
+            </div>
             <div className="flex justify-end gap-2 mt-1">
               <button onClick={handleCancel} className="p-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors" title="Cancelar">
                 <X className="w-4 h-4" />
@@ -144,28 +160,51 @@ export function StockCard({ stock, onDelete, onToggleNotifications, onUpdateLimi
           </div>
         ) : (
           <div  className=" text-sm bg-kawaii-bg2 px-3 pt-3 rounded-2xl border border-kawaii-detail1 mb-4 relative group/limits">
-            <div className= "flex items-center justify-between">
+            <div className= "flex items-center justify-between text-center">
               <div>
                 <p className="  text-kawaii-detail2">Mis Acciones:</p>
-                <p className="font-bold">{stock.myStocks ?? 0}</p>
+                <p className="font-bold">{stock.myStocks ?? 0} </p>
               </div>
 
-              <div className="text-right">
-                <p className="text-kawaii-detail2">Valor Total (MXN)</p>
-                <p className="font-bold text-kawaii-dark">
-                  ${((stock.myStocks ?? 0) * stock.currentPrice * exchangeRate).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div className="text-right relative">
+                <p className="text-kawaii-detail2 leading-tight">Valor Total (MXN)</p>
+                <p className="font-bold text-kawaii-dark text-lg leading-tight">
+                  ${((stock.myStocks ?? 0) * stock.currentPrice * currentRate).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
+                
+                {/* Exchange Rate Toggle - Appears on Hover */}
+                <div className="absolute -left-10 top-6 opacity-0 group-hover/limits:opacity-100 transition-opacity z-20">
+                  <div className="bg-white rounded-full p-1 shadow-md border border-kawaii-detail1 flex gap-1">
+                    <button 
+                      onClick={onToggleExchangeRate}
+                      className={`p-1 rounded-full transition-all ${stock.useCustomExchangeRate ? 'bg-kawaii-bg2 text-gray-400' : 'bg-kawaii-accent1 text-kawaii-dark ring-1 ring-kawaii-detail1'}`}
+                      title="Usar API"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${!stock.useCustomExchangeRate ? 'animate-spin-slow' : ''}`} />
+                    </button>
+                    <button 
+                      onClick={onToggleExchangeRate}
+                      className={`p-1 rounded-full transition-all ${!stock.useCustomExchangeRate ? 'bg-kawaii-bg2 text-gray-400' : 'bg-kawaii-accent1 text-kawaii-dark ring-1 ring-kawaii-detail1'}`}
+                      title="Usar Personalizado"
+                    >
+                      <User className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               </div>
               <button
                 onClick={() => setIsEditing(true)}
-                className="absolute -top-3 -right-3 p-2 bg-white rounded-full shadow-sm border border-kawaii-detail1 text-kawaii-detail2 hover:text-kawaii-dark opacity-0 group-hover/limits:opacity-100 transition-all"
-                title="Editar límites"
+                className="absolute -top-3 -right-3 p-2 bg-white rounded-full shadow-sm border border-kawaii-detail1 text-kawaii-detail2 hover:text-kawaii-dark opacity-0 group-hover/limits:opacity-100 transition-all z-10"
+                title="Editar"
               >
                 <Edit3 className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex justify-center mt-3">
-              <p className="text-[12px] text-kawaii-detail2">1USD : {exchangeRate?.toFixed(2)}MNX</p>    
+            <div className="flex justify-center mt-3 pb-2">
+              <p className="text-[11px] text-kawaii-detail2 flex items-center gap-1">
+                {stock.useCustomExchangeRate ? <User className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
+                1USD : {currentRate.toFixed(2)} MXN
+              </p>    
             </div>
                 
           </div>
