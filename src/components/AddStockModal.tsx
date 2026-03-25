@@ -3,17 +3,18 @@ import { X, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Stock } from '../types';
 
-export function AddStockModal({ onClose, onAdd }: { onClose: () => void, onAdd: (stock: Omit<Stock, 'id' | 'currentPrice' | 'basePrice'>) => Promise<boolean> }) {
+export function AddStockModal({ onClose, onAdd, defaultRate }: { onClose: () => void, onAdd: (stock: Omit<Stock, 'id' | 'currentPrice' | 'basePrice' | 'useCustomExchangeRate'>) => Promise<boolean>, defaultRate: number }) {
   const [symbol, setSymbol] = useState('');
   const [company, setCompany] = useState('');
   const [myStocks, setMyStocks] = useState('');
   const [minLimit, setMinLimit] = useState('');
   const [maxLimit, setMaxLimit] = useState('');
+  const [customExchangeRate, setCustomExchangeRate] = useState(defaultRate.toString());
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!symbol || !company || !myStocks || !minLimit || !maxLimit) return;
+    if (!symbol || !company || !myStocks || !minLimit || !maxLimit || !customExchangeRate) return;
     
     setIsLoading(true);
     await onAdd({
@@ -22,6 +23,7 @@ export function AddStockModal({ onClose, onAdd }: { onClose: () => void, onAdd: 
       myStocks: parseFloat(myStocks) || 0,
       minLimit: parseFloat(minLimit),
       maxLimit: parseFloat(maxLimit),
+      customExchangeRate: parseFloat(customExchangeRate) || defaultRate,
       notificationsEnabled: true,
     });
     setIsLoading(false);
@@ -44,41 +46,58 @@ export function AddStockModal({ onClose, onAdd }: { onClose: () => void, onAdd: 
         
         <h2 className="text-3xl font-sniglet text-kawaii-dark mb-6 text-center">Nueva Empresa 🌸</h2>
         
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Símbolo (ej. NASDAQ: AAPL)</label>
-            <input 
-              type="text" 
-              value={symbol}
-              onChange={e => setSymbol(e.target.value)}
-              placeholder="AAPL"
-              className="w-full bg-kawaii-bg2 border-2 border-kawaii-detail1 rounded-2xl px-4 py-3 focus:outline-none focus:border-kawaii-accent2 font-sniglet text-lg"
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Símbolo</label>
+              <input 
+                type="text" 
+                value={symbol}
+                onChange={e => setSymbol(e.target.value)}
+                placeholder="NASDAQ: VC"
+                className="w-full bg-kawaii-bg2 border-2 border-kawaii-detail1 rounded-2xl px-4 py-3 focus:outline-none focus:border-kawaii-accent2 font-sniglet text-lg"
+                required
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Empresa (ej. Apple)</label>
-            <input 
-              type="text" 
-              value={company}
-              onChange={e => setCompany(e.target.value)}
-              placeholder="Apple"
-              className="w-full bg-kawaii-bg2 border-2 border-kawaii-detail1 rounded-2xl px-4 py-3 focus:outline-none focus:border-kawaii-accent2 font-sniglet text-lg"
-              required
-            />
+            <div>
+              <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Empresa</label>
+              <input 
+                type="text" 
+                value={company}
+                onChange={e => setCompany(e.target.value)}
+                placeholder="Visteon"
+                className="w-full bg-kawaii-bg2 border-2 border-kawaii-detail1 rounded-2xl px-4 py-3 focus:outline-none focus:border-kawaii-accent2 font-sniglet text-lg"
+                required
+              />
+            </div>
           </div>
           
-          <div>
-            <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Tus Stocks (ej. 20)</label>
-            <input 
-              type="number" 
-              value={myStocks}
-              onChange={e => setMyStocks(e.target.value)}
-              placeholder="20"
-              className="w-full bg-kawaii-bg2 border-2 border-kawaii-detail1 rounded-2xl px-4 py-3 focus:outline-none focus:border-kawaii-accent2 font-sniglet text-lg"
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Tus Stocks</label>
+              <input 
+                type="number" 
+                value={myStocks}
+                onChange={e => setMyStocks(e.target.value)}
+                placeholder="20"
+                className="w-full bg-kawaii-bg2 border-2 border-kawaii-detail1 rounded-2xl px-4 py-3 focus:outline-none focus:border-kawaii-accent2 font-sniglet text-lg"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-kawaii-detail2 mb-1">Exchange Rate (MXN)</label>
+              <input 
+                type="number" 
+                step="0.01"
+                value={customExchangeRate}
+                onChange={e => setCustomExchangeRate(e.target.value)}
+                placeholder="18.00"
+                className="w-full bg-kawaii-bg2 border-2 border-kawaii-detail1 rounded-2xl px-4 py-3 focus:outline-none focus:border-kawaii-accent2 font-sniglet text-lg"
+                required
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
