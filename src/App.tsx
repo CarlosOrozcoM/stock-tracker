@@ -26,7 +26,10 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSakuraEnabled, setIsSakuraEnabled] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [exchangeRate, setExchangeRate] = useState<number>(18.0); // Valor por defecto
+  const [exchangeRate, setExchangeRate] = useState<number>(() => {
+    const saved = localStorage.getItem('frankfurter-rate');
+    return saved ? parseFloat(saved) : 18.0;
+  }); 
   const stocksRef = useRef(stocks);
 
   // Fetch exchange rate
@@ -36,7 +39,9 @@ export default function App() {
         const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=MXN');
         const data = await res.json();
         if (data && data.rates && data.rates.MXN) {
-          setExchangeRate(data.rates.MXN);
+          const rate = data.rates.MXN;
+          setExchangeRate(rate);
+          localStorage.setItem('frankfurter-rate', rate.toString());
         }
       } catch (error) {
         console.error("Error fetching exchange rate:", error);
@@ -44,8 +49,7 @@ export default function App() {
     };
 
     fetchExchangeRate();
-    const interval = setInterval(fetchExchangeRate, 600000); // Cada 10 min
-    return () => clearInterval(interval);
+    // La API solo se actualiza una vez al día, así que consultamos solo al iniciar la web app
   }, []);
 
   useEffect(() => {
@@ -146,7 +150,7 @@ export default function App() {
     }, 5000);
   };
 
-  const addStock = async (newStock: Omit<Stock, 'id' | 'currentPrice' | 'basePrice'>) => {
+  const addStock = async (newStock: Omit<Stock, 'id' | 'currentPrice' | 'basePrice' | 'useCustomExchangeRate'>) => {
     const priceData = await fetchStockPrice(newStock.symbol);
     
     if (!priceData) {
@@ -160,6 +164,7 @@ export default function App() {
       basePrice: priceData.previousClose,
       currentPrice: priceData.currentPrice,
       hasMaxNotificationShown: false,
+      useCustomExchangeRate: true, // Por defecto usamos el valor custom que el usuario ingresó
     };
     setStocks(prev => [...prev, stock]);
     setIsAddModalOpen(false);
@@ -174,12 +179,16 @@ export default function App() {
     setStocks(stocks.map(s => s.id === id ? { ...s, notificationsEnabled: !s.notificationsEnabled } : s));
   };
 
-  const updateStockLimits = (id: string, minLimit: number, maxLimit: number, myStocks: number) => {
-    setStocks(stocks.map(s => s.id === id ? { ...s, minLimit, maxLimit, myStocks } : s));
+  const updateStockLimits = (id: string, minLimit: number, maxLimit: number, myStocks: number, customExchangeRate: number) => {
+    setStocks(stocks.map(s => s.id === id ? { ...s, minLimit, maxLimit, myStocks, customExchangeRate } : s));
+  };
+
+  const toggleExchangeRateSource = (id: string) => {
+    setStocks(stocks.map(s => s.id === id ? { ...s, useCustomExchangeRate: !s.useCustomExchangeRate } : s));
   };
 
   return (
-    <div className="min-h-screen bg-kawaii-bg2 p-4 md:p-8 font-quicksand">
+    <div className="min-h-screen bg-kawaii-bg1/20 p-4 md:p-8 font-quicksand">
       <header className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div className="flex items-center gap-3">
           <div 
@@ -215,7 +224,8 @@ export default function App() {
                   stock={stock} 
                   onDelete={() => deleteStock(stock.id)}
                   onToggleNotifications={() => toggleNotifications(stock.id)}
-                  onUpdateLimits={(min, max, qty) => updateStockLimits(stock.id, min, max, qty)}
+                  onUpdateLimits={(min, max, qty, customRate) => updateStockLimits(stock.id, min, max, qty, customRate)}
+                  onToggleExchangeRate={() => toggleExchangeRateSource(stock.id)}
                   exchangeRate={exchangeRate}
                 />
               ))}
@@ -229,6 +239,7 @@ export default function App() {
           <AddStockModal 
             onClose={() => setIsAddModalOpen(false)} 
             onAdd={addStock} 
+            defaultRate={exchangeRate}
           />
         )}
       </AnimatePresence>
